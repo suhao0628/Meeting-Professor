@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table
+from sqlalchemy import create_engine,Column, Integer, String, ForeignKey, Table
 from sqlalchemy.orm import declarative_base,relationship
 
 Base = declarative_base()
@@ -57,3 +57,7 @@ class Activity(Base):
         self.time = time
         self.place = place
         self.event = event
+
+# Database configuration
+engine = create_engine('sqlite:///meeting_professor.db')
+Base.metadata.create_all(engine)
