@@ -1,12 +1,14 @@
 import logging
-from telegram import Update
 
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, ContextTypes
+
 
 # Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
+
 logger = logging.getLogger(__name__)
 
 HELP_MSG = "/login       login your account.\n"
@@ -16,6 +18,9 @@ HELP_MSG += "/list         list activity.\n"
 HELP_MSG += "/my_activities  personal joined activities.\n"
 HELP_MSG += "/help        list Available commands.\n"
 
+PROFESSOR_LIST = [5138021525]  # Set your predefined user_id here
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Welcome! \n\n" + HELP_MSG)
+
