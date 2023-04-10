@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine,Column, Integer, String, ForeignKey, Table
 from sqlalchemy.orm import declarative_base,relationship
+from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
 
@@ -58,6 +59,9 @@ class Activity(Base):
         self.place = place
         self.event = event
 
+
 # Database configuration
 engine = create_engine('sqlite:///meeting_professor.db')
 Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+session = Session()
