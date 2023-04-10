@@ -1,7 +1,7 @@
 import logging
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Application, CommandHandler, ContextTypes,CallbackQueryHandler
+from telegram.ext import Application, CommandHandler, ContextTypes,CallbackQueryHandler,ConversationHandler
 
 from controllers import UserController
 from utils import register
@@ -99,6 +99,9 @@ async def create_activity(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     else:
         await update.message.reply_text("Sorry, you need to login first")
 
+async def cancel_create_activity(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Activity creation canceled.")
+    return ConversationHandler.END
 
 def main() -> None:
     """Start the bot."""
