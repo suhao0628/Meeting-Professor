@@ -62,3 +62,38 @@ class StudentController:
         if student:
             session.delete(student)
             session.commit()
+
+
+class ActivityController:
+
+    @staticmethod
+    def create(professor_id, date, time, place, event):
+        activity = Activity(professor_id=professor_id, date=date, time=time, place=place, event=event)
+        session.add(activity)
+        session.commit()
+        return activity
+
+    @staticmethod
+    def get(activity_id):
+        return session.query(Activity).get(activity_id)
+
+    @staticmethod
+    def update(activity_id, date=None, time=None, place=None, event=None):
+        activity = session.query(Activity).get(activity_id)
+        if activity:
+            if date:
+                activity.date = date
+            if time:
+                activity.time = time
+            if place:
+                activity.place = place
+            if event:
+                activity.event = event
+            session.commit()
+
+    @staticmethod
+    def delete(activity_id):
+        activity = session.query(Activity).get(activity_id)
+        if activity:
+            session.delete(activity)
+            session.commit()
