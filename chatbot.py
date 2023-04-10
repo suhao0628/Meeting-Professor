@@ -1,9 +1,9 @@
 import logging
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Application, CommandHandler, ContextTypes,CallbackQueryHandler
+from telegram.ext import Application, CommandHandler, ContextTypes,CallbackQueryHandler,ConversationHandler
 
-from controllers import UserController
+from controllers import UserController,ActivityController
 from utils import register
 
 # Enable logging
@@ -99,6 +99,38 @@ async def create_activity(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     else:
         await update.message.reply_text("Sorry, you need to login first")
 
+async def get_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    date = update.message.text
+    context.user_data["date"] = date
+    await update.message.reply_text("Please enter the time (HH:MM): \nor you can click here to exit /cancel")
+    return A_TIME
+
+async def get_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    time = update.message.text
+    context.user_data["time"] = time
+    await update.message.reply_text("Please enter the place: \nor you can click here to exit /cancel")
+    return A_PLACE
+
+async def get_place(update: Update, context:  ContextTypes.DEFAULT_TYPE) -> int:
+    place = update.message.text
+    context.user_data["place"] = place
+    await update.message.reply_text("Please enter the event: \nor you can click here to exit /cancel")
+    return A_EVENT
+
+async def get_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    event = update.message.text
+    context.user_data["event"] = event
+
+    new_activity = ActivityController.create(
+        context.user_data["professor_id"],
+        context.user_data["date"],
+        context.user_data["time"],
+        context.user_data["place"],
+        context.user_data["event"]
+    )
+
+    await update.message.reply_text(f"New activity created with ID: {new_activity.activity_id}")
+    return ConversationHandler.END
 
 def main() -> None:
     """Start the bot."""
