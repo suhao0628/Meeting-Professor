@@ -1,7 +1,7 @@
 import logging
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Application, CommandHandler, ContextTypes,CallbackQueryHandler,ConversationHandler
+from telegram.ext import Application, CommandHandler, ContextTypes,CallbackQueryHandler,ConversationHandler,MessageHandler,filters
 
 from controllers import UserController,ActivityController
 from utils import register
@@ -132,6 +132,11 @@ async def get_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"New activity created with ID: {new_activity.activity_id}")
     return ConversationHandler.END
 
+
+async def cancel_create_activity(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Activity creation canceled.")
+    return ConversationHandler.END
+
 def main() -> None:
     """Start the bot."""
 
@@ -148,6 +153,18 @@ def main() -> None:
 
     application.add_handler(CallbackQueryHandler(signUpButton))
 
+    create_conversation = ConversationHandler(
+        entry_points=[CommandHandler('create', create_activity)],
+        states={
+            A_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_date)],
+            A_TIME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_time)],
+            A_PLACE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_place)],
+            A_EVENT: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_event)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel_create_activity)],
+    )
+
+    application.add_handler(create_conversation)
     application.bot_data.update(context_data)
     # Run the bot until the user presses Ctrl-C
     application.run_polling()
