@@ -22,6 +22,7 @@ HELP_MSG += "/help        list Available commands.\n"
 
 PROFESSOR_LIST = [5138021525]  # Set your predefined user_id here
 
+A_DATE, A_TIME, A_PLACE, A_EVENT = range(4)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Welcome! \n\n" + HELP_MSG)
@@ -85,6 +86,18 @@ async def signUpButton(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             await query.edit_message_text(f"You are now a {new_user.user_type}. \n" + HELP_MSG)
         else:
             await query.edit_message_text(f"You can not sign up as student, coz you are not on professor list")
+
+
+async def create_activity(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    if context.bot_data["isLogin"]:
+        if update.effective_user.id in PROFESSOR_LIST:
+            await update.message.reply_text("Please enter the date (DD-MM-YYYY): ")#\nor you can click here to exit /cancel
+            return A_DATE
+        else:
+            await update.message.reply_text("Sorry, you are not professor")
+            return -1
+    else:
+        await update.message.reply_text("Sorry, you need to login first")
 
 
 def main() -> None:
