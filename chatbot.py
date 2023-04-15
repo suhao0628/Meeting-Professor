@@ -100,11 +100,13 @@ async def create_activity(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     else:
         await update.message.reply_text("Sorry, you need to login first")
 
+
 async def get_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     date = update.message.text
     context.user_data["date"] = date
     await update.message.reply_text("Please enter the time (HH:MM): \nor you can click here to exit /cancel")
     return A_TIME
+
 
 async def get_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     time = update.message.text
@@ -112,11 +114,13 @@ async def get_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text("Please enter the place: \nor you can click here to exit /cancel")
     return A_PLACE
 
+
 async def get_place(update: Update, context:  ContextTypes.DEFAULT_TYPE) -> int:
     place = update.message.text
     context.user_data["place"] = place
     await update.message.reply_text("Please enter the event: \nor you can click here to exit /cancel")
     return A_EVENT
+
 
 async def get_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
     event = update.message.text
@@ -161,7 +165,6 @@ async def list_activities(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("sorry, you need to login first")
 
 
-
 def main() -> None:
     """Start the bot."""
 
@@ -170,7 +173,7 @@ def main() -> None:
     }
 
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token("5613084877:AAEl8qbzCirqOhGtL7F3wTEFHrxBxh9wG-w").build()
+    application = Application.builder().token("").build()
 
     # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))
