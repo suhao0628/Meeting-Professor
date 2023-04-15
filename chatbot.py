@@ -4,7 +4,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, ContextTypes,CallbackQueryHandler,ConversationHandler,MessageHandler,filters
 
 from controllers import UserController,ActivityController
-from utils import register
+from utils import register,get_activities_by_user,get_activities_by_professor,get_all_activities
 
 # Enable logging
 logging.basicConfig(
@@ -23,6 +23,7 @@ HELP_MSG += "/help        list Available commands.\n"
 PROFESSOR_LIST = [5138021525]  # Set your predefined user_id here
 
 A_DATE, A_TIME, A_PLACE, A_EVENT = range(4)
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Welcome! \n\n" + HELP_MSG)
@@ -137,6 +138,30 @@ async def cancel_create_activity(update: Update, context: ContextTypes.DEFAULT_T
     await update.message.reply_text("Activity creation canceled.")
     return ConversationHandler.END
 
+
+async def my_activities(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.bot_data["isLogin"]:
+        user_id = update.effective_user.id
+        user = UserController.get(user_id)
+        if user.user_type == "student":
+            activities = user.activities
+            await update.message.reply_text(get_activities_by_user(activities))
+        else:
+            professor_id = update.effective_user.id
+            await update.message.reply_text(get_activities_by_professor(professor_id))
+    else:
+        await update.message.reply_text("sorry, you need to login first")
+
+
+async def list_activities(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.bot_data["isLogin"]:
+        message = get_all_activities()
+        await update.message.reply_text(message)
+    else:
+        await update.message.reply_text("sorry, you need to login first")
+
+
+
 def main() -> None:
     """Start the bot."""
 
@@ -165,6 +190,11 @@ def main() -> None:
     )
 
     application.add_handler(create_conversation)
+
+    application.add_handler(CommandHandler("list", list_activities))
+
+    application.add_handler(CommandHandler("my_activities", my_activities))
+
     application.bot_data.update(context_data)
     # Run the bot until the user presses Ctrl-C
     application.run_polling()

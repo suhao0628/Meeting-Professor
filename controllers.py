@@ -97,3 +97,9 @@ class ActivityController:
         if activity:
             session.delete(activity)
             session.commit()
+
+    @staticmethod
+    def get_activities_by_professor_id(professor_id):
+        activities = session.query(Activity).filter_by(professor_id=professor_id).all()
+        return activities
+
