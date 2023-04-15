@@ -99,6 +99,28 @@ class ActivityController:
             session.commit()
 
     @staticmethod
+    def get_all():
+        return session.query(Activity).all()
+
+    @staticmethod
+    def add_student(activity_id, student_id):
+        activity = session.query(Activity).filter_by(activity_id=activity_id).first()
+        student = session.query(Student).filter_by(user_id=student_id).first()
+        if activity and student:
+            activity.participants.append(student)
+            session.commit()
+            return True
+        return False
+
+    @staticmethod
+    def is_student_in_activity(activity_id, student_id):
+        student = session.query(Student).filter_by(user_id=student_id).first()
+        joined_activities = [int(a.activity_id) for a in student.activities]
+        if int(activity_id) in joined_activities:
+            return True
+        return False
+
+    @staticmethod
     def get_activities_by_professor_id(professor_id):
         activities = session.query(Activity).filter_by(professor_id=professor_id).all()
         return activities

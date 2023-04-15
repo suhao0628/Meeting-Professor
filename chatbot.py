@@ -21,9 +21,9 @@ HELP_MSG += "/my_activities  personal joined activities.\n"
 HELP_MSG += "/help        list Available commands.\n"
 
 PROFESSOR_LIST = [5138021525]  # Set your predefined user_id here
-
+TOKEN = ""
 A_DATE, A_TIME, A_PLACE, A_EVENT = range(4)
-
+A_JOIN_STATUS = 0
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Welcome! \n\n" + HELP_MSG)
@@ -165,6 +165,43 @@ async def list_activities(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("sorry, you need to login first")
 
 
+async def join_activity(update: Update, context: ContextTypes.DEFAULT_TYPE) ->  int:
+    if context.bot_data["isLogin"]:
+
+        if update.effective_user.id in PROFESSOR_LIST:
+            await update.message.reply_text("You are professor, you cant join event.")
+            return -1
+
+        message = get_all_activities()
+        await update.message.reply_text(message + " \nplease select an event and enter the ID to join:")
+        return A_JOIN_STATUS
+
+    else:
+        await update.message.reply_text("You need to login first.")
+        return -1
+
+async def process_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    activity_id = update.message.text
+    context.user_data["activity_id"] = int(activity_id)
+
+    # check if student already joined?
+    if ActivityController.is_student_in_activity(int(activity_id), update.effective_user.id):
+        await update.message.reply_text("Sorry, you already joined this Activity.")
+
+    else:
+        succeed = ActivityController.add_student(context.user_data["activity_id"], update.effective_user.id)
+        if succeed:
+            await update.message.reply_text("Join Activity succeed.")
+        else:
+            await update.message.reply_text("Error Occurs, Can not join Activity.")
+
+    return ConversationHandler.END
+
+async def cancel_join_activity(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Join Activity canceled.")
+    return ConversationHandler.END
+
+
 def main() -> None:
     """Start the bot."""
 
@@ -173,7 +210,7 @@ def main() -> None:
     }
 
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token("").build()
+    application = Application.builder().token(TOKEN).build()
 
     # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))
@@ -195,6 +232,15 @@ def main() -> None:
     application.add_handler(create_conversation)
 
     application.add_handler(CommandHandler("list", list_activities))
+
+    join_conversation = ConversationHandler(
+        entry_points=[CommandHandler('join', join_activity)],
+        states={
+            A_JOIN_STATUS: [MessageHandler(filters.TEXT & ~filters.COMMAND, process_join)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel_join_activity)],
+    )
+    application.add_handler(join_conversation)
 
     application.add_handler(CommandHandler("my_activities", my_activities))
 
