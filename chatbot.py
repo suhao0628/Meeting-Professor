@@ -4,7 +4,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, ContextTypes,CallbackQueryHandler,ConversationHandler,MessageHandler,filters
 
 from controllers import UserController,ActivityController
-from utils import register
+from utils import register,get_activities_by_user,get_activities_by_professor,get_all_activities
 
 # Enable logging
 logging.basicConfig(
@@ -23,6 +23,7 @@ HELP_MSG += "/help        list Available commands.\n"
 PROFESSOR_LIST = [5138021525]  # Set your predefined user_id here
 
 A_DATE, A_TIME, A_PLACE, A_EVENT = range(4)
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Welcome! \n\n" + HELP_MSG)
@@ -99,11 +100,13 @@ async def create_activity(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     else:
         await update.message.reply_text("Sorry, you need to login first")
 
+
 async def get_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     date = update.message.text
     context.user_data["date"] = date
     await update.message.reply_text("Please enter the time (HH:MM): \nor you can click here to exit /cancel")
     return A_TIME
+
 
 async def get_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     time = update.message.text
@@ -111,11 +114,13 @@ async def get_time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text("Please enter the place: \nor you can click here to exit /cancel")
     return A_PLACE
 
+
 async def get_place(update: Update, context:  ContextTypes.DEFAULT_TYPE) -> int:
     place = update.message.text
     context.user_data["place"] = place
     await update.message.reply_text("Please enter the event: \nor you can click here to exit /cancel")
     return A_EVENT
+
 
 async def get_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
     event = update.message.text
@@ -137,6 +142,29 @@ async def cancel_create_activity(update: Update, context: ContextTypes.DEFAULT_T
     await update.message.reply_text("Activity creation canceled.")
     return ConversationHandler.END
 
+
+async def my_activities(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.bot_data["isLogin"]:
+        user_id = update.effective_user.id
+        user = UserController.get(user_id)
+        if user.user_type == "student":
+            activities = user.activities
+            await update.message.reply_text(get_activities_by_user(activities))
+        else:
+            professor_id = update.effective_user.id
+            await update.message.reply_text(get_activities_by_professor(professor_id))
+    else:
+        await update.message.reply_text("sorry, you need to login first")
+
+
+async def list_activities(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.bot_data["isLogin"]:
+        message = get_all_activities()
+        await update.message.reply_text(message)
+    else:
+        await update.message.reply_text("sorry, you need to login first")
+
+
 def main() -> None:
     """Start the bot."""
 
@@ -145,7 +173,7 @@ def main() -> None:
     }
 
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token("5613084877:AAEl8qbzCirqOhGtL7F3wTEFHrxBxh9wG-w").build()
+    application = Application.builder().token("").build()
 
     # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))
@@ -165,6 +193,11 @@ def main() -> None:
     )
 
     application.add_handler(create_conversation)
+
+    application.add_handler(CommandHandler("list", list_activities))
+
+    application.add_handler(CommandHandler("my_activities", my_activities))
+
     application.bot_data.update(context_data)
     # Run the bot until the user presses Ctrl-C
     application.run_polling()
