@@ -125,3 +125,15 @@ class ActivityController:
         activities = session.query(Activity).filter_by(professor_id=professor_id).all()
         return activities
 
+
+    @staticmethod
+    def delete_user_from_activity(student_id, activity_id):
+        activity = session.query(Activity).filter_by(activity_id=activity_id).first()
+        student = session.query(Student).filter_by(user_id=student_id).first()
+        try:
+            student.activities.remove(activity)
+            session.commit()
+            return True
+        except:
+            return False
+

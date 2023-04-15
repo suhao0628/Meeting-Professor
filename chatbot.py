@@ -22,8 +22,11 @@ HELP_MSG += "/help        list Available commands.\n"
 
 PROFESSOR_LIST = [5138021525]  # Set your predefined user_id here
 TOKEN = ""
+
 A_DATE, A_TIME, A_PLACE, A_EVENT = range(4)
 A_JOIN_STATUS = 0
+A_CANCEL_JOINED = 0
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Welcome! \n\n" + HELP_MSG)
@@ -180,6 +183,7 @@ async def join_activity(update: Update, context: ContextTypes.DEFAULT_TYPE) ->  
         await update.message.reply_text("You need to login first.")
         return -1
 
+
 async def process_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
     activity_id = update.message.text
     context.user_data["activity_id"] = int(activity_id)
@@ -197,8 +201,45 @@ async def process_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return ConversationHandler.END
 
+
 async def cancel_join_activity(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Join Activity canceled.")
+    return ConversationHandler.END
+
+
+async def cancel_from_joined_activity(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.bot_data["isLogin"]:
+
+        if update.effective_user.id in PROFESSOR_LIST:
+            await update.message.reply_text("You are professor, you cant run this command.")
+            return -1
+
+        user = UserController.get(update.effective_user.id)
+        activities = user.activities
+        message = get_activities_by_user(activities)
+
+        await update.message.reply_text(message + " \nplease select an event and enter the ID to cancel:")
+        return A_CANCEL_JOINED
+
+    else:
+        await update.message.reply_text("You need to login first.")
+        return -1
+
+
+async def cancel_from_joined_activity_process(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    activity_id = update.message.text
+    context.user_data["activity_id"] = int(activity_id)
+    # delete user from activity
+    if ActivityController.delete_user_from_activity(update.effective_user.id, int(activity_id)):
+        await update.message.reply_text("cancel operation succeed")
+    else:
+        await update.message.reply_text("Woops, Something went wrong.")
+
+    return ConversationHandler.END
+
+
+async def stop_cancel_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Stopped cancel Joined-Activity.")
     return ConversationHandler.END
 
 
@@ -243,6 +284,15 @@ def main() -> None:
     application.add_handler(join_conversation)
 
     application.add_handler(CommandHandler("my_activities", my_activities))
+
+    cancel_joined_conversation = ConversationHandler(
+        entry_points=[CommandHandler('cancel_joined', cancel_from_joined_activity)],
+        states={
+            A_CANCEL_JOINED: [MessageHandler(filters.TEXT & ~filters.COMMAND, cancel_from_joined_activity_process)],
+        },
+        fallbacks=[CommandHandler("stop_cancel_joined", stop_cancel_joined)],
+    )
+    application.add_handler(cancel_joined_conversation)
 
     application.bot_data.update(context_data)
     # Run the bot until the user presses Ctrl-C
